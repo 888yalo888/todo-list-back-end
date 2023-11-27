@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "start": "nodemon ./server.js"
+        "start": "nodemon ./server.js",
+        "live": "node ./server.js"
     },
     "name": "todo-server",
     "version": "0.1.0",
