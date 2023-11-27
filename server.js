@@ -59,6 +59,6 @@ app.put('/api/todolist/change-existing-task/:id', async (req, res) => {
     res.end();
 });
 
-app.listen(8001, () => {
+app.listen(8001, '0.0.0.0', () => {
     console.log('Server is running 8001');
 });
