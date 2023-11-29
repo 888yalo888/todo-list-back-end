@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "set NODE_ENV=development&& nodemon ./server.js",
-        "live": "set NODE_ENV=production&& node ./server.js"
+        "live": "node ./server.js"
     },
     "name": "todo-server",
     "version": "0.1.0",
