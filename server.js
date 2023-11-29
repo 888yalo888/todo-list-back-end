@@ -2,20 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { Task } from './db.js';
 
-const TODO_LIST_MOCKS = [
-    {
-        id: '1',
-        title: 'Walk the dog',
-    },
-    {
-        id: '2',
-        title: 'Do the dishes',
-    },
-    {
-        id: '3',
-        title: 'Walk on the street',
-    },
-];
+const PORT = 8001;
 
 const app = express();
 
@@ -23,6 +10,8 @@ app.use(express.json());
 app.use(cors());
 
 app.get('/api/todolist/get-all-items', async (_req, res) => {
+    console.log('/api/todolist/get-all-items');
+
     const tasks = await Task.find();
 
     res.send(tasks);
@@ -50,15 +39,9 @@ app.put('/api/todolist/change-existing-task/:id', async (req, res) => {
 
     await Task.findByIdAndUpdate(newTitleId, { title: newTitle });
 
-    // const neededTaskIndex = TODO_LIST_MOCKS.findIndex(
-    //     (item) => item.id === newTitleId
-    // );
-
-    // TODO_LIST_MOCKS[neededTaskIndex].title = newTitle;
-
     res.end();
 });
 
-app.listen(4000, '0.0.0.0', () => {
-    console.log('Server is running 8001');
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running ${PORT}`);
 });
