@@ -9,4 +9,9 @@ console.log('DB_URL', DB_URL);
 
 await mongoose.connect(DB_URL);
 
-export const Task = mongoose.model('Task', { title: String });
+export const Task = mongoose.model('Task', { title: String, ownerId: String });
+
+export const User = mongoose.model('User', {
+    email: String,
+    password: String,
+});
