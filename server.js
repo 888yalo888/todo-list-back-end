@@ -1,14 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import { Task, User } from './db.js';
+import { Task, User, Token } from './db.js';
 
 const PORT = 8001;
 
-const tokensStorage = {
-    // '2023-12-06T14:53:29.603Z-***FOR TEST: olga@gmail.com***': {
-    //     userId: '656e049cc4199bf0c972031a',
-    // },
-};
+//const tokensStorage = {
+// '2023-12-06T14:53:29.603Z-***FOR TEST: olga@gmail.com***': {
+//     userId: '656e049cc4199bf0c972031a',
+// },
+//};
+
+// [
+// {
+//     token: '2023-12-06T14:53:29.603Z-***FOR TEST: olga@gmail.com***',
+//     userId: '656e049cc4199bf0c972031a',
+// },
+// ]
 
 const app = express();
 
@@ -20,12 +27,17 @@ app.get('/api/todolist/get-all-items', async (req, res) => {
 
     const token = req.headers.token;
 
-    const tokenBody = tokensStorage[token];
+    //const tokenBody = tokensStorage[token];
+    const tokenBody = await Token.findOne({
+        token,
+    });
 
     if (tokenBody) {
         const tasks = await Task.find({
             ownerId: tokenBody.userId,
         });
+
+        console.log('tokenBody', tokenBody);
 
         res.send(tasks);
     }
@@ -35,7 +47,10 @@ app.post('/api/todolist/add-new-task', async (req, res) => {
     const token = req.headers.token;
     const newItem = req.body;
 
-    const tokenBody = tokensStorage[token];
+    //const tokenBody = tokensStorage[token];
+    const tokenBody = await Token.findOne({
+        token,
+    });
 
     if (tokenBody) {
         await Task.create({ ...newItem, ownerId: tokenBody.userId });
@@ -78,7 +93,8 @@ app.post(`/api/login`, async (req, res) => {
 
         console.log('token', token);
 
-        tokensStorage[token] = { userId: user._id };
+        //tokensStorage[token] = { userId: user._id };
+        await Token.create({ token, userId: user._id });
 
         res.end(token);
     } else {
@@ -89,11 +105,12 @@ app.post(`/api/login`, async (req, res) => {
 });
 
 app.get(`/api/user`, async (req, res) => {
-    console.log('api/user');
+    console.log('api/user ');
 
     const token = req.headers.token;
 
-    const { userId } = tokensStorage[token];
+    //const { userId } = tokensStorage[token];
+    const { userId } = await Token.findOne({ token }); //Returns an OBJECT
 
     const user = await User.findOne({
         _id: userId,

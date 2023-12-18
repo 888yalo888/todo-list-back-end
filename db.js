@@ -15,3 +15,8 @@ export const User = mongoose.model('User', {
     email: String,
     password: String,
 });
+
+export const Token = mongoose.model('Token', {
+    token: String,
+    userId: String,
+});
