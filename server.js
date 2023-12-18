@@ -4,7 +4,7 @@ import { Task, User } from './db.js';
 
 const PORT = 8001;
 
-const tokens = {
+const tokensStorage = {
     // '2023-12-06T14:53:29.603Z-***FOR TEST: olga@gmail.com***': {
     //     userId: '656e049cc4199bf0c972031a',
     // },
@@ -20,7 +20,7 @@ app.get('/api/todolist/get-all-items', async (req, res) => {
 
     const token = req.headers.token;
 
-    const tokenBody = tokens[token];
+    const tokenBody = tokensStorage[token];
 
     if (tokenBody) {
         const tasks = await Task.find({
@@ -35,7 +35,7 @@ app.post('/api/todolist/add-new-task', async (req, res) => {
     const token = req.headers.token;
     const newItem = req.body;
 
-    const tokenBody = tokens[token];
+    const tokenBody = tokensStorage[token];
 
     if (tokenBody) {
         await Task.create({ ...newItem, ownerId: tokenBody.userId });
@@ -63,7 +63,7 @@ app.put('/api/todolist/change-existing-task/:id', async (req, res) => {
 
 // Login api
 
-app.post(`/api/todolist/login`, async (req, res) => {
+app.post(`/api/login`, async (req, res) => {
     const loginData = req.body;
 
     const user = await User.findOne({
@@ -78,7 +78,7 @@ app.post(`/api/todolist/login`, async (req, res) => {
 
         console.log('token', token);
 
-        tokens[token] = { userId: user._id };
+        tokensStorage[token] = { userId: user._id };
 
         res.end(token);
     } else {
@@ -86,6 +86,20 @@ app.post(`/api/todolist/login`, async (req, res) => {
 
         res.end('Login failed');
     }
+});
+
+app.get(`/api/user`, async (req, res) => {
+    console.log('api/user');
+
+    const token = req.headers.token;
+
+    const { userId } = tokensStorage[token];
+
+    const user = await User.findOne({
+        _id: userId,
+    });
+
+    res.send(user);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
