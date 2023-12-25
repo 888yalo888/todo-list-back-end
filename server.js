@@ -22,59 +22,72 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get('/api/todolist/get-all-items', async (req, res) => {
-    console.log('/api/todolist/get-all-items');
+// Step 2: Checking the token
+app.use(async (req, _res, next) => {
+    const {
+        headers: { token },
+    } = req;
 
-    const token = req.headers.token;
-
-    //const tokenBody = tokensStorage[token];
-    const tokenBody = await Token.findOne({
-        token,
-    });
-
-    if (tokenBody) {
-        const tasks = await Task.find({
-            ownerId: tokenBody.userId,
+    if (token) {
+        const user = await Token.findOne({
+            token,
         });
 
-        console.log('tokenBody', tokenBody);
+        if (user) {
+            req.userId = user.userId;
+        }
+    }
+
+    next();
+});
+
+app.get('/api/todolist/get-all-items', async ({ userId }, res) => {
+    console.log('/api/todolist/get-all-items');
+
+    if (userId) {
+        const tasks = await Task.find({
+            ownerId: userId,
+        });
 
         res.send(tasks);
     }
 });
 
-app.post('/api/todolist/add-new-task', async (req, res) => {
-    const token = req.headers.token;
-    const newItem = req.body;
+app.post('/api/todolist/add-new-task', async ({ userId, body }, res) => {
+    if (userId) {
+        await Task.create({ ...body, ownerId: userId });
+    }
 
-    //const tokenBody = tokensStorage[token];
-    const tokenBody = await Token.findOne({
-        token,
-    });
+    res.end();
+});
 
-    if (tokenBody) {
-        await Task.create({ ...newItem, ownerId: tokenBody.userId });
+app.delete(
+    '/api/todolist/delete-item/:id',
+    async ({ userId, params: { id } }, res) => {
+        //const token = req.headers.token;
+        // const idItem = req.params.id;
+
+        // const { userId } = await Token.findOne({
+        //     token,
+        // }); // === { _id, token, userId, __v }
+
+        await Task.findOneAndDelete({ _id: id, ownerId: userId });
 
         res.end();
     }
-});
+);
 
-app.delete('/api/todolist/delete-item/:id', async (req, res) => {
-    const idItem = req.params.id;
+app.put(
+    '/api/todolist/change-existing-task/:id',
+    async ({ userId, params: { id }, body: { title } }, res) => {
+        //const idItem = req.params.id;
+        //const newTitle = req.body.title;
 
-    await Task.findByIdAndDelete(idItem);
+        await Task.findOneAndUpdate({ _id: id, ownerId: userId }, { title });
 
-    res.end();
-});
-
-app.put('/api/todolist/change-existing-task/:id', async (req, res) => {
-    const newTitleId = req.params.id;
-    const newTitle = req.body.title;
-
-    await Task.findByIdAndUpdate(newTitleId, { title: newTitle });
-
-    res.end();
-});
+        res.end();
+    }
+);
 
 // Login api
 
@@ -102,6 +115,18 @@ app.post(`/api/login`, async (req, res) => {
 
         res.end('Login failed');
     }
+});
+
+//Log out api
+
+app.delete(`/api/logout`, async ({ headers: { token } }, res) => {
+    const exists = await Task.exists({ token });
+
+    const deleteResult = await Task.findOneAndDelete({ token });
+
+    console.log('delete', token, exists, deleteResult);
+
+    res.end();
 });
 
 app.get(`/api/user`, async (req, res) => {
