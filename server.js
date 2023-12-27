@@ -41,8 +41,8 @@ app.use(async (req, _res, next) => {
     next();
 });
 
-app.get('/api/todolist/get-all-items', async ({ userId }, res) => {
-    console.log('/api/todolist/get-all-items');
+app.get('/api/todolist/tasks', async ({ userId }, res) => {
+    console.log('/api/todolist/tasks');
 
     if (userId) {
         const tasks = await Task.find({
@@ -50,6 +50,8 @@ app.get('/api/todolist/get-all-items', async ({ userId }, res) => {
         });
 
         res.send(tasks);
+    } else {
+        res.status(400).end("It's private API. Need to login to get tasks");
     }
 });
 
@@ -117,12 +119,41 @@ app.post(`/api/login`, async (req, res) => {
     }
 });
 
+//Sign up api
+
+app.post(`/api/signup`, async (req, res) => {
+    const loginData = req.body;
+
+    const isExists = await User.exists({
+        email: loginData.email,
+    });
+
+    if (isExists) {
+        res.status(400).end('User with this email already exists');
+
+        return;
+    }
+
+    const user = await User.create({
+        email: loginData.email,
+        password: loginData.password,
+    });
+
+    const token = `${new Date().toISOString()}-***FOR TEST: ${
+        loginData.email
+    }***`;
+
+    await Token.create({ token, userId: user._id });
+
+    res.end(token);
+});
+
 //Log out api
 
 app.delete(`/api/logout`, async ({ headers: { token } }, res) => {
-    const exists = await Task.exists({ token });
+    const exists = await Token.exists({ token });
 
-    const deleteResult = await Task.findOneAndDelete({ token });
+    const deleteResult = await Token.findOneAndDelete({ token });
 
     console.log('delete', token, exists, deleteResult);
 
