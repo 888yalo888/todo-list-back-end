@@ -29,12 +29,12 @@ app.use(async (req, _res, next) => {
     } = req;
 
     if (token) {
-        const user = await Token.findOne({
+        const tokenData = await Token.findOne({
             token,
         });
 
-        if (user) {
-            req.userId = user.userId;
+        if (tokenData) {
+            req.userId = tokenData.userId;
         }
     }
 
@@ -55,13 +55,16 @@ app.get('/api/todolist/tasks', async ({ userId }, res) => {
     }
 });
 
-app.post('/api/todolist/add-new-task', async ({ userId, body }, res) => {
-    if (userId) {
-        await Task.create({ ...body, ownerId: userId });
-    }
+app.post(
+    '/api/todolist/add-new-task',
+    async ({ userId, body: newTaskData }, res) => {
+        if (userId) {
+            await Task.create({ ...newTaskData, ownerId: userId });
+        }
 
-    res.end();
-});
+        res.end();
+    }
+);
 
 app.delete(
     '/api/todolist/delete-item/:id',
@@ -119,6 +122,29 @@ app.post(`/api/login`, async (req, res) => {
     }
 });
 
+//Log out api
+
+app.delete(`/api/logout`, async ({ headers: { token } }, res) => {
+    await Token.findOneAndDelete({ token });
+
+    res.end();
+});
+
+app.get(`/api/user`, async ({ userId }, res) => {
+    console.log('api/user ');
+
+    // const token = req.headers.token;
+
+    //const { userId } = tokensStorage[token];
+    // const { userId } = await Token.findOne({ token }); //Returns an OBJECT
+
+    const user = await User.findOne({
+        _id: userId,
+    });
+
+    res.send(user);
+});
+
 //Sign up api
 
 app.post(`/api/signup`, async (req, res) => {
@@ -146,33 +172,6 @@ app.post(`/api/signup`, async (req, res) => {
     await Token.create({ token, userId: user._id });
 
     res.end(token);
-});
-
-//Log out api
-
-app.delete(`/api/logout`, async ({ headers: { token } }, res) => {
-    const exists = await Token.exists({ token });
-
-    const deleteResult = await Token.findOneAndDelete({ token });
-
-    console.log('delete', token, exists, deleteResult);
-
-    res.end();
-});
-
-app.get(`/api/user`, async (req, res) => {
-    console.log('api/user ');
-
-    const token = req.headers.token;
-
-    //const { userId } = tokensStorage[token];
-    const { userId } = await Token.findOne({ token }); //Returns an OBJECT
-
-    const user = await User.findOne({
-        _id: userId,
-    });
-
-    res.send(user);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
