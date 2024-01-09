@@ -108,6 +108,12 @@ app.delete(`/api/logout`, async ({ headers: { token } }, res) => {
 app.post(`/api/signup`, async (req, res) => {
     const loginData = req.body;
 
+    if (!loginData.email || !loginData.password) {
+        res.status(400).end('Email and password are required');
+
+        return;
+    }
+
     const isExists = await User.exists({
         email: loginData.email,
     });

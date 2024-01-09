@@ -10,8 +10,14 @@ await mongoose.connect(DB_URL);
 export const Task = mongoose.model('Task', { title: String, userId: String });
 
 export const User = mongoose.model('User', {
-    email: String,
-    password: String,
+    email: {
+        type: String,
+        required: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
 });
 
 export const Token = mongoose.model('Token', {
